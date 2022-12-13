@@ -68,4 +68,3 @@ To find those 4 points, several methods:
 - Detect lines with houghlines2
     - That's we're doing for now.
 - What else ?
-
