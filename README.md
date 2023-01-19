@@ -34,6 +34,16 @@
  "row": 1
 }
 ```
+## Installation Docker
+
+Build Docker
+
+docker build -t bildverarbeitungsservice .
+
+Run Docker
+
+docker run -p 8090:5000 bildverarbeitungsservice
+
 
 # Goal of this project is to find a grid (chessboard) in the given image.
 
@@ -68,3 +78,4 @@ To find those 4 points, several methods:
 - Detect lines with houghlines2
     - That's we're doing for now.
 - What else ?
+
