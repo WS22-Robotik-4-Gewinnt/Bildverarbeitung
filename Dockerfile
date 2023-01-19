@@ -10,7 +10,8 @@ COPY ./requirements.txt /FeedService/requirements.txt
 COPY ./app /FeedService/app
 
 # Instal fswebcam to capture screenshots
-RUN apt-get install -y curl fswebcam
+# RUN apt-get install -y curl fswebcam
+
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Update
