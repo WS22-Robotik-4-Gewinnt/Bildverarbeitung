@@ -55,7 +55,7 @@ async def home():
 
 
 @app.post("/ready")
-async def ready(difficulty: Board.Difficulty):
+async def ready(difficulty: Board): #TODO I Thought Board.Difficulty
     if difficulty != 0:
         takePicture
 
