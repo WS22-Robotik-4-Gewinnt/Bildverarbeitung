@@ -2,6 +2,16 @@ import requests
 from fastapi import FastAPI
 from pydantic import BaseModel
 from function import takePicture  # , function
+import logging
+# logging
+LOG = "logging_data.log"
+logging.basicConfig(filename=LOG, filemode="w", level=logging.DEBUG)
+
+# console handler
+console = logging.StreamHandler()
+console.setLevel(logging.ERROR)
+logging.getLogger("").addHandler(console)
+
 
 app = FastAPI()
 
@@ -55,16 +65,20 @@ async def home():
 
 
 @app.post("/ready")
-async def ready(difficulty: Board): #TODO I Thought Board.Difficulty
-    if difficulty != 0:
-        takePicture
-
-        addmessage = {"Colum1": Board.Column1, "Difficulty": Board.Difficulty}
-        r = requests.post('http://localhost:8093/updateBoard', "ok", addmessage)
-        return {"message": "Hello world" + addmessage}  # Post http://localhost:8093/updateBoard
+#async def ready(Difficulty: int): #TODO I Thought Board.Difficulty
+async def ready(newBoard: Board): #TODO I Thought Board.Difficulty
+    if newBoard.Difficulty != 0:
+        Difficulty = newBoard.Difficulty
+        takePicture()
+        logging.info(str(Difficulty))
+#        addmessage = {"Colum": Board.Column, "Difficulty": difficulty}
+        addmessage = {"Difficulty": Difficulty}
+        # r = requests.post('http://localhost:8093/updateBoard', "ok", {"Difficulty": Difficulty})
+        return {"message": "Hello world"}  # Post http://localhost:8093/updateBoard
     else:
         return {"no difficulty"}
 
 # PORT Bildverarbeitung: 8090
 # PORT Spielalgorithmus: 8093
 # PORT Hardwaresteuerung: 8096
+# docker login -p PASSWORD -u USER/MAIL github.com
