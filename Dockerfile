@@ -9,7 +9,7 @@ WORKDIR /Bildverarbeitungsservice
 COPY ./requirements.txt /Bildverarbeitungsservice/requirements.txt
 COPY ./src /Bildverarbeitungsservice/src
 
-# Instal fswebcam to capture screenshots
+# Instal fswebcam to capture screenshots (only at linux)
 # RUN apt-get install -y curl fswebcam
 
 RUN pip install --no-cache-dir -r requirements.txt

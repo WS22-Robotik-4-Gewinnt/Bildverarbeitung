@@ -724,7 +724,7 @@ def time_convert(sec):
     print("Time Lapsed = {0}:{1}:{2}".format(int(hours), int(mins), sec))
 
 
-def _main(img_file):
+def bilderkennung(img_file):
     """Run from command line, parsing command line arguments"""
     #args = parse_args()
     #if args.test:

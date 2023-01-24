@@ -4,8 +4,10 @@ from pydantic import BaseModel
 # from function import takePicture  # , function
 import logging
 import json
+from function import takePicture
 
 # logging
+
 LOG = "logging_data.log"
 logging.basicConfig(filename=LOG, filemode="w", level=logging.DEBUG)
 
@@ -42,7 +44,7 @@ async def home():
 async def ready(difficulty: Difficulty):
     if difficulty != 0:
         Difficulty = difficulty
-        # takePicture()
+        takePicture()
         logging.info(str(Difficulty))
 
         addMessage = '{ "Column1": {"Row1":"h", "Row2":"0", "Row3":"0", "Row4":"0", "Row5":"0", "Row6":"0"}, "Column2": {' \
