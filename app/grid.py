@@ -464,7 +464,7 @@ def four_point_transform(image, pts):
     perspective_transform = cv2.getPerspectiveTransform(point_matrix, converted_points)
     img_Output = cv2.warpPerspective(image, perspective_transform, (maxWidth, maxHeight))
     if DEBUG:
-        cv2.imwrite("/home/flyingdutchman/PycharmProjects/connect4/output/WARPED-image.jpg", img_Output)
+        cv2.imwrite("./output/WARPED-image.jpg", img_Output)
     return img_Output
 
     # now that we have the dimensions of the new image, construct
@@ -482,8 +482,8 @@ def four_point_transform(image, pts):
     warped = cv2.warpPerspective(image, M, (maxWidth, maxHeight))
 
     if DEBUG:
-        cv2.imwrite("/home/flyingdutchman/PycharmProjects/connect4/output/PRE-WARPED-image.jpg", image)
-        cv2.imwrite("/home/flyingdutchman/PycharmProjects/connect4/output/WARPED-image.jpg", warped)
+        cv2.imwrite("./output/PRE-WARPED-image.jpg", image)
+        cv2.imwrite("./output/WARPED-image.jpg", warped)
     # return the warped image
     return warped
 
@@ -626,13 +626,13 @@ def find_outer_bounds(img):
     cv2.drawContours(mask, [best_cnt], 0, 0, 2)
 
     if DEBUG:
-        cv2.imwrite("/home/flyingdutchman/PycharmProjects/connect4/output/mask-image.jpg", mask)
+        cv2.imwrite("./output/mask-image.jpg", mask)
 
     out = np.zeros_like(gray)
     out[mask == 255] = gray[mask == 255]
 
     if DEBUG:
-        cv2.imwrite("/home/flyingdutchman/PycharmProjects/connect4/output/New image-image.jpg", out)
+        cv2.imwrite("./output/New image-image.jpg", out)
 
 
     # Get the corners of our
@@ -665,8 +665,8 @@ def find_outer_bounds(img):
     # warped = cv2.copyMakeBorder(warped, 2, 2, 2, 2, cv2.BORDER_CONSTANT, value=[255, 255, 255])
 
     if DEBUG:
-        cv2.imwrite("/home/flyingdutchman/PycharmProjects/connect4/output/Nasdad.jpg", warped)
-        cv2.imwrite("/home/flyingdutchman/PycharmProjects/connect4/output/CORNERS.jpg", out)
+        cv2.imwrite("./output/Nasdad.jpg", warped)
+        cv2.imwrite("./output/CORNERS.jpg", out)
 
     topl = most_left_top_to_bottom[0].copy()
     topr = most_right_top_to_bottom[0].copy()
@@ -724,22 +724,29 @@ def time_convert(sec):
     print("Time Lapsed = {0}:{1}:{2}".format(int(hours), int(mins), sec))
 
 
-def _main():
+def _main(img_file):
     """Run from command line, parsing command line arguments"""
-    args = parse_args()
-    if args.test:
-        import doctest
-        doctest.testmod()
-        exit(0)
+    #args = parse_args()
+    #if args.test:
+    #    import doctest
+    #    doctest.testmod()
+    #    exit(0)
+
+    #img = "./image_demo.jpg"
+
+    img_file = cv2.imread("./image_demo.jpg")
 
     start_time = time.time()
     global DEBUG
     DEBUG = False
-    img, grid = find_grid(args.file, args.debug)
+
+
+    img, grid = find_grid(img_file)
 
     end_time = time.time()
     time_lapsed = end_time - start_time
-    time_convert(time_lapsed)
+    #time_convert(time_lapsed)
+    return print_grid_as_json(img, grid)
 
     if args.term:
         print_grid_to_term(img, grid)

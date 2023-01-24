@@ -19,8 +19,9 @@ def takePicture():
     cv2.imwrite('./testimage.jpg', image)
     cam.release()
     #cv2.destroyAllWindows()
-    _main()
+    _main('./image_demo.jpg')
     return ("fine")
 
+takePicture()
 
 
