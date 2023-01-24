@@ -1,0 +1,9 @@
+sudo apt install git
+git clone https://github.com/WS22-Robotik-4-Gewinnt/Bildverarbeitung.git
+sudo apt-get install python-opencv
+pip install opencv-python==4.5.3.56
+Install Fastapi and uvicorn: 
+pip3 install fastapi uvicorn
+Start the App 
+python -m uvicorn main:app --host 0.0.0.0 --reload
+pip3 install matplotlib imutils
