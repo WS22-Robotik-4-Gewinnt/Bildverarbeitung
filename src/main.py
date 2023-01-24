@@ -51,7 +51,7 @@ async def ready(difficulty: Difficulty):
                      '"Row3":"0", "Row4":"0", "Row5":"0", "Row6":"0"}, "Column5": {"Row1":"0", "Row2":"0", "Row3":"0", ' \
                      '"Row4":"0", "Row5":"0", "Row6":"0"}, "Column6": {"Row1":"h", "Row2":"h", "Row3":"h", "Row4":"0", ' \
                      '"Row5":"0", "Row6":"0"}, "Column7": {"Row1":"r", "Row2":"r", "Row3":"0", "Row4":"0", "Row5":"0", ' \
-                     '"Row6":"0"}, "Difficulty": 4}'
+                     '"Row6":"0"}, "Difficulty": Difficulty}'
 
         addMessage = json.loads(addMessage)
         r = requests.post(f"http://localhost:8093/updateBoard", json=addMessage)
