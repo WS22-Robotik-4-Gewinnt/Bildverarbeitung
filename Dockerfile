@@ -4,10 +4,10 @@ FROM python:3.9
 
 
 # start Ordner
-WORKDIR /FeedService
+WORKDIR /Bildverarbeitungsservice
 
-COPY ./requirements.txt /FeedService/requirements.txt
-COPY ./app /FeedService/app
+COPY ./requirements.txt /Bildverarbeitungsservice/requirements.txt
+COPY ./src /Bildverarbeitungsservice/src
 
 # Instal fswebcam to capture screenshots
 # RUN apt-get install -y curl fswebcam
