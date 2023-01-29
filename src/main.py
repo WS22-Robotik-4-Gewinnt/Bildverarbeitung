@@ -81,7 +81,7 @@ async def ready_debug_static(difficulty: Difficulty):
 
 
 def analyze_grid(take_image: bool = True):
-    img_path = str(pathlib.Path(__file__).resolve().parent.parent) + '/assets/image_demo.jpg'
+    img_path = str(pathlib.Path(__file__).resolve().parent) + '/assets/image_demo.jpg'
 
     global saturation, saturation, grid_buffer, human_color, robot_color, image_resize, camera_id
 
