@@ -10,10 +10,7 @@ import imutils
 import numpy as np
 from numpy.linalg import norm
 from matplotlib import pyplot as plt
-import time
 
-DEBUG = False
-COLOR_TRESHOLD = 180
 
 class GridFinderException(Exception):
     """Exception thrown by GridFinder when somethings wrong"""
@@ -24,6 +21,7 @@ class DebugUI(object):
     """Build a debug user interface showing each step of the grid finding
     process.
     """
+
     def __init__(self):
         self.plot_number = 0
 
@@ -110,6 +108,7 @@ class LinePattern(object):
     `start` being where the pattern starts, and `step`, the space
     between each lines.
     """
+
     def __init__(self, start, step):
         self.start = start % step
         self.step = step
@@ -123,7 +122,6 @@ class LinePattern(object):
         """
         yield from ((x, self.step) for x in
                     range(self.start, maximum, self.step))
-
 
     @staticmethod
     def infer(positions, min_step=4):
@@ -140,9 +138,9 @@ class LinePattern(object):
         positions = np.convolve(positions, (1 / 3, 2 / 3, 1 / 3))
         best = (0, 0, 0)
         for start, step, value in [
-                (start, step, sum(positions[start::step]))
-                for step in range(min_step, int(len(positions) / 2))
-                for start in range(int(len(positions) / 2))]:
+            (start, step, sum(positions[start::step]))
+            for step in range(min_step, int(len(positions) / 2))
+            for start in range(int(len(positions) / 2))]:
             if value > best[2]:
                 best = start, step, value
         return LinePattern(best[0], best[1])
@@ -159,8 +157,8 @@ class Grid(object):
     And a draw(self, image, color=(255, 0, 0), thickness=2) method,
     to draw the grid on a given image, usefull to check for correctness.
     """
+
     def __init__(self, edges):
-    #   self.keep_rows_and_cols(edges)
         self.lines = lines = self.keep_lines(edges)
         self.columns = columns = self.keep_cols(edges)
         min_x_step = int(edges.shape[0] / 50)
@@ -169,19 +167,6 @@ class Grid(object):
         self.ypattern = LinePattern.infer(np.sum(columns, axis=0), min_y_step)
         self.all_x = list(self.xpattern.coordinates_up_to(edges.shape[0]))
         self.all_y = list(self.ypattern.coordinates_up_to(edges.shape[1]))
-
-    @staticmethod
-    def keep_rows_and_cols(array):
-        lines = cv2.HoughLinesP(array, 1, np.pi / 180, 275, minLineLength=200, maxLineGap=100)
-
-        for x1, y1, x2, y2 in lines:
-            for index, (x3, y3, x4, y4) in enumerate(lines):
-
-                if y1 == y2 and y3 == y4:  # Horizontal Lines
-                    diff = abs(y1 - y3)
-                elif x1 == x2 and x3 == x4:  # Vertical Lines
-                    diff = abs(x1 - x3)
-
 
     @staticmethod
     def keep_lines(array):
@@ -226,6 +211,16 @@ class Grid(object):
         """
         for x, _ in self.all_x:
             yield [(x, y) for y, height in self.all_y]
+
+    def cells_column_by_column(self):
+        """
+        Return all cells, row by row, like:
+        [[(x, y), (x, y), ...]
+         [(x, y), (x, y), ...]
+         ... ]
+        """
+        for y, _ in self.all_y:
+            yield [(x, y) for x, width in self.all_x]
 
     def all_cells(self):
         """
@@ -336,7 +331,7 @@ def sort_points(points):
     return top_left, top_right, bottom_right, bottom_left
 
 
-def parse_args():
+def parse_args(args=None):
     """Return parsed arguments from command line"""
     from argparse import ArgumentParser
     parser = ArgumentParser(description='Grid finder')
@@ -344,7 +339,7 @@ def parse_args():
     parser.add_argument('--test', help='Run doctests', action='store_true')
     parser.add_argument('--debug',
                         help='Using matplotlib, display information '
-                        'about each step of the process.',
+                             'about each step of the process.',
                         action='store_true')
     parser.add_argument('--verbose', '-v',
                         help='Use more verbose, a bit less parsable output',
@@ -354,7 +349,20 @@ def parse_args():
     parser.add_argument('--term', help='Print the grid as colored brackets',
                         action='store_true')
     parser.add_argument('--imwrite', help='Write a clean image of the grid')
-    return parser.parse_args()
+
+    parser.add_argument('--hc', help='Color of the human player.'
+                                     'Default = red', default='red')
+    parser.add_argument('--rc', help='Color of the robot player.'
+                                     'Default = green', default='green')
+    parser.add_argument('--bb', help='Buffer to add around detected rectangle to improve grid detection.'
+                                     'Default = 1', default='1')
+    parser.add_argument('--resize', help='Resizes the input image for better performance.'
+                                         'Default = 500', default='500')
+    parser.add_argument('--saturation', help='Modify the saturation of the input image.'
+                                             'Default = 1', default='1')
+    if args is None:
+        return parser.parse_args()
+    return parser.parse_args(args)
 
 
 def line_length(line):
@@ -413,8 +421,6 @@ def draw_lines(edges, lines):
 def warp_image(image, top_left, top_right, bottom_right, bottom_left):
     """Warp the given image into the given box coordinates.
     """
-
-
     width = np.linalg.norm(np.array(top_left, np.float32) -
                            np.array(top_right, np.float32))
     height = np.linalg.norm(np.array(top_right, np.float32) -
@@ -456,40 +462,20 @@ def four_point_transform(image, pts):
 
     point_matrix = np.float32([tl, tr, br, bl])
 
-
     # Convert points
-    converted_points = np.float32([converted_red_pixel_value, converted_green_pixel_value, converted_black_pixel_value, converted_blue_pixel_value])
+    converted_points = np.float32([converted_red_pixel_value, converted_green_pixel_value, converted_black_pixel_value,
+                                   converted_blue_pixel_value])
 
     # perspective transform
     perspective_transform = cv2.getPerspectiveTransform(point_matrix, converted_points)
     img_Output = cv2.warpPerspective(image, perspective_transform, (maxWidth, maxHeight))
-    if DEBUG:
-        cv2.imwrite("./output/WARPED-image.jpg", img_Output)
     return img_Output
 
-    # now that we have the dimensions of the new image, construct
-    # the set of destination points to obtain a "birds eye view",
-    # (i.e. top-down view) of the image, again specifying points
-    # in the top-left, top-right, bottom-right, and bottom-left
-    # order
-    dst = np.array([
-        [0, 0],
-        [maxWidth - 1, 0],
-        [maxWidth - 1, maxHeight - 1],
-        [0, maxHeight - 1]], dtype = "float32")
-    # compute the perspective transform matrix and then apply it
-    M = cv2.getPerspectiveTransform(rect, dst)
-    warped = cv2.warpPerspective(image, M, (maxWidth, maxHeight))
-
-    if DEBUG:
-        cv2.imwrite("./output/PRE-WARPED-image.jpg", image)
-        cv2.imwrite("./output/WARPED-image.jpg", warped)
-    # return the warped image
-    return warped
 
 def print_grid_to_term(img, grid):
     """Print the given grid, in ascii, using 256 colors, to the terminal.
     """
+
     def print_color(*args, **kwargs):
         """
         Like print() but with extra `color` argument,
@@ -508,40 +494,151 @@ def print_grid_to_term(img, grid):
         for cell in line:
             x, y = cell[0], cell[1]
             color = cv2.mean(img[x:x + grid.xpattern.step,
-                                 y:y + grid.ypattern.step])
+                             y:y + grid.ypattern.step])
             print_color('[]', color=(color[:3]), end='')
         print()
 
 
-def print_grid_as_json(img, grid):
+def grid_as_json(img, grid, human_color, robot_color, saturation: float):
     """Export the given grid as a json file containing a list of cells as:
     {'x': ..., 'y': ..., 'color': ...}
     """
     import json
-    lines = []
-    for line in grid.cells_line_by_line():
-        line = [(x, y, cv2.mean(img[x:x + grid.xpattern.step,
-                                    y:y + grid.ypattern.step]))
-                for x, y in line]
-        line = [{'x': cell[0],
-                 'y': cell[1],
-                 'color': (int(cell[2][0]),
-                           int(cell[2][1]),
-                           int(cell[2][2]))}
-                for cell in line]
-        lines.append(line)
-    print(json.dumps(lines, indent=4))
-    sys.exit(0)
+    columns = {}
+
+    img_flat = img.copy()
+    # img_flat = increase_brightness(img_flat)
+    img_flat = modify_saturation(img_flat, saturation)
+
+    width = grid.xpattern.step
+    height = grid.ypattern.step
+    column_counter = 1
+
+    for column in grid.cells_column_by_column():
+        row_counter = 1
+        rows = {}
+        for cell in column:
+            x, y = cell
+
+            # We only want a smaller area of the cell
+            center_x = x + int(width / 2)
+            center_y = y + int(height / 2)
+            offset_x_left = center_x - int(width / 4)
+            offset_x_right = center_x + int(width / 4)
+            offset_y_top = center_y - int(height / 4)
+            offset_y_bottom = center_y + int(height / 4)
+
+            average = img_flat[offset_x_left:offset_x_right, offset_y_top:offset_y_bottom].mean(axis=0).mean(axis=0)
+            color = find_base_color(average)
+            rows['Row' + (str(row_counter))] = color_to_player(color, human_color, robot_color)
+            row_counter += 1
+
+        columns['Column' + (str(column_counter))] = deepcopy(rows)
+        column_counter += 1
+
+    return json.dumps(columns, indent=4)
 
 
-def write_grid_in_file(img, grid, imwrite):
+def color_to_player(color, human_color, robot_color):
+    if color == [255, 0, 0]:
+        color_string = 'blue'
+    elif color == [0, 255, 0]:
+        color_string = 'green'
+    elif color == [0, 0, 255]:
+        color_string = 'red'
+    else:
+        color_string = 'white'
+
+    if color_string == human_color:
+        return 'h'
+    elif color_string == robot_color:
+        return 'r'
+    else:
+        return '0'
+
+
+def write_grid_in_file(img, grid, imwrite, saturation: float):
     """Write given grid as a new image in the given file.
     """
     img_flat = img.copy()
+    # img_flat = increase_brightness(img_flat)
+    img_flat = modify_saturation(img_flat, saturation)
+
     for x, y, width, height in grid.all_cells():
-        mean_color = cv2.mean(img[x:x + width, y:y + height])[:3]
-        img_flat[x:x + width, y:y + height] = mean_color
+        # We only want a smaller area of the cell
+        center_x = x + int(width / 2)
+        center_y = y + int(height / 2)
+        offset_x_left = center_x - int(width / 4)
+        offset_x_right = center_x + int(width / 4)
+        offset_y_top = center_y - int(height / 4)
+        offset_y_bottom = center_y + int(height / 4)
+
+        average = img_flat[offset_x_left:offset_x_right, offset_y_top:offset_y_bottom].mean(axis=0).mean(axis=0)
+
+        col = find_base_color(average)
+        img_flat[x:x + width, y:y + height] = col
+
     cv2.imwrite(imwrite, img_flat)
+
+
+def find_base_color(mean_color):
+    low_red = [0, 18, 20]
+    high_red = [15, 255, 255]
+    low_red_2 = [165, 50, 20]
+    high_red_2 = [180, 255, 255]
+    low_blue = [90, 50, 20]
+    high_blue = [135, 255, 255]
+    low_green = [35, 0, 20]
+    high_green = [105, 255, 255]
+
+    hsv_mean = cv2.cvtColor(np.uint8([[mean_color]]), cv2.COLOR_BGR2HSV)
+
+    if blue_green_in_bound(hsv_mean[0][0], low_green, high_green):
+        return [0, 255, 0]
+    if blue_green_in_bound(hsv_mean[0][0], low_blue, high_blue):
+        return [255, 0, 0]
+    if red_in_bound(hsv_mean[0][0], low_red, high_red, low_red_2, high_red_2):
+        return [0, 0, 255]
+    return [255, 255, 255]
+
+
+def increase_brightness(img, value=30):
+    hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+    h, s, v = cv2.split(hsv)
+
+    lim = 255 - value
+    v[v > lim] = 255
+    v[v <= lim] += value
+
+    final_hsv = cv2.merge((h, s, v))
+    img = cv2.cvtColor(final_hsv, cv2.COLOR_HSV2BGR)
+    return img
+
+
+def modify_saturation(img, value):
+    hsv_img = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+    hsv_img[..., 1] = hsv_img[..., 1] * value
+    return cv2.cvtColor(hsv_img, cv2.COLOR_HSV2BGR)
+
+
+def blue_green_in_bound(array, lower_bound, upper_bound):
+    if array[0] >= lower_bound[0] and array[1] >= lower_bound[1] and array[2] >= lower_bound[2]:
+        if array[0] <= upper_bound[0] and array[1] <= upper_bound[1] and array[2] <= upper_bound[2]:
+            return True
+    return False
+
+
+def red_in_bound(array, lower_bound, upper_bound, red_second_lower_bound=None, red_second_upper_bound=None):
+    if red_second_upper_bound is not None:
+        if (array[0] >= lower_bound[0] and array[1] >= lower_bound[1] and array[2] >= lower_bound[2]) or \
+                (array[0] >= red_second_lower_bound[0] and array[1] >= red_second_lower_bound[1] and array[2] >=
+                 red_second_lower_bound[2]):
+            if (array[0] <= upper_bound[0] and array[1] <= upper_bound[1] and array[2] <= upper_bound[2]) or \
+                    (array[0] <= red_second_upper_bound[0] and array[1] <= red_second_upper_bound[1] and array[2] <=
+                     red_second_upper_bound[2]):
+                return True
+
+    return False
 
 
 def find_rectangle(best_lines):
@@ -585,27 +682,8 @@ def order_points(pts):
     rect[3] = most_right_top_to_bottom[1]  # Bottom right
     return rect
 
-    # initialzie a list of coordinates that will be ordered
-    # such that the first entry in the list is the top-left,
-    # the second entry is the top-right, the third is the
-    # bottom-right, and the fourth is the bottom-left
-    rect = np.zeros((4, 2), dtype = "float32")
-    # the top-left point will have the smallest sum, whereas
-    # the bottom-right point will have the largest sum
-    s = pts.sum(axis = 1)
-    rect[0] = pts[np.argmin(s)]
-    rect[2] = pts[np.argmax(s)]
-    # now, compute the difference between the points, the
-    # top-right point will have the smallest difference,
-    # whereas the bottom-left will have the largest difference
-    diff = np.diff(pts, axis = 1)
-    rect[1] = pts[np.argmin(diff)]
-    rect[3] = pts[np.argmax(diff)]
-    # return the ordered coordinates
-    return rect
 
-
-def find_outer_bounds(img):
+def find_outer_bounds(img, border_buffer=1):
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     blur = cv2.GaussianBlur(gray, (7, 7), 0)
     thresh = cv2.adaptiveThreshold(blur, 255, 1, 1, 11, 2)
@@ -618,147 +696,85 @@ def find_outer_bounds(img):
             if area > max_area:
                 max_area = area
                 best_cnt = i
-                # img = cv2.drawContours(img, contours, c, (0, 255, 0), 3)
         c += 1
 
-    mask = np.zeros((gray.shape), np.uint8)
+    mask = np.zeros(gray.shape, np.uint8)
     cv2.drawContours(mask, [best_cnt], 0, 255, -1)
     cv2.drawContours(mask, [best_cnt], 0, 0, 2)
-
-    if DEBUG:
-        cv2.imwrite("./output/mask-image.jpg", mask)
 
     out = np.zeros_like(gray)
     out[mask == 255] = gray[mask == 255]
 
-    if DEBUG:
-        cv2.imwrite("./output/New image-image.jpg", out)
-
-
-    # Get the corners of our
+    # Get the corners of our grid
     corners = cv2.goodFeaturesToTrack(mask, 4, 0.1, 100)
 
-    # abort if
+    # Abort execution if no rectangle could be found
     if corners is None or len(corners) < 4:
         return False, _, _, _, _, _
 
-    most_left_top_to_bottom = sorted(sorted(corners, key=lambda element: (element[0][0], element[0][1]))[:2], key=lambda element: (element[0][1]))[:2]
-    most_right_top_to_bottom = sorted(sorted(corners, key=lambda element: (element[0][0], element[0][1]))[2:4], key=lambda element: (element[0][1]))[:2]
+    # Sort the corners
+    most_left_top_to_bottom = sorted(sorted(corners, key=lambda element: (element[0][0], element[0][1]))[:2],
+                                     key=lambda element: (element[0][1]))[:2]
+    most_right_top_to_bottom = sorted(sorted(corners, key=lambda element: (element[0][0], element[0][1]))[2:4],
+                                      key=lambda element: (element[0][1]))[:2]
 
     corners = deepcopy(corners)
-    corners[0] = deepcopy(most_left_top_to_bottom[0])
-    corners[1] = deepcopy(most_left_top_to_bottom[1])
-    corners[2] = deepcopy(most_right_top_to_bottom[0])
-    corners[3] = deepcopy(most_right_top_to_bottom[1])
+    corners[0] = deepcopy(most_left_top_to_bottom[0])  # top left
+    corners[1] = deepcopy(most_right_top_to_bottom[0])  # top right
+    corners[2] = deepcopy(most_right_top_to_bottom[1])  # bottom right
+    corners[3] = deepcopy(most_left_top_to_bottom[1])  # bottom left
 
-    print(corners[0][0][1])
-    corners[0][0][1] = corners[0][0][1] - 5
-    corners[2][0][1] = corners[2][0][1] - 5
+    # Move corners slightly to create a buffer in order to improve grid detection
+    corners[0][0][0] -= border_buffer
+    corners[0][0][1] -= border_buffer
+    corners[1][0][0] += border_buffer
+    corners[1][0][1] -= border_buffer
+    corners[2][0][0] += border_buffer
+    corners[2][0][1] += border_buffer
+    corners[3][0][0] -= border_buffer
+    corners[3][0][1] += border_buffer
 
+    # Create our warped image
     warped = four_point_transform(img, corners)
 
-    # Add black border
-    #warped = cv2.copyMakeBorder(warped, 1, 1, 1, 1, cv2.BORDER_CONSTANT, value=[105, 105, 105])
+    return True, warped, corners[0], corners[1], corners[2], corners[3]
 
 
-    # Add white border
-    # warped = cv2.copyMakeBorder(warped, 2, 2, 2, 2, cv2.BORDER_CONSTANT, value=[255, 255, 255])
-
-    if DEBUG:
-        cv2.imwrite("./output/Nasdad.jpg", warped)
-        cv2.imwrite("./output/CORNERS.jpg", out)
-
-    topl = most_left_top_to_bottom[0].copy()
-    topr = most_right_top_to_bottom[0].copy()
-    botl = most_left_top_to_bottom[1].copy()
-    botr = most_right_top_to_bottom[1].copy()
-
-    return True, warped, topl, topr, botr, botl
-
-    # ordered = order_points(corners)
-    # return True, ordered[0],
-
-def find_grid(filename, debug=False):
+def find_grid(filename: str, resize: int, border_buffer: int):
     """Find a grid pattern in the given file.
     Returns a tuple containing a flattened image so the found grid is
     now a rectangle, and a `Grid` object representing the found grid.
     """
     img = cv2.imread(filename)
-    img = imutils.resize(img, 500)
-    found, new_img, top_left, top_right, bottom_right, bottom_left = find_outer_bounds(img)
-    warped_edges = cv2.Canny(new_img, 100, 200)  # try 66, 133, 3 ?
+    img = imutils.resize(img, resize)
+    found, new_img, top_left, top_right, bottom_right, bottom_left = find_outer_bounds(img, border_buffer)
+    warped_edges = cv2.Canny(new_img, 100, 200)
     grid = Grid(warped_edges)
-    # if debug:
-    #     points = (top_left, top_right, bottom_right, bottom_left)
-    #     DebugUI().show_all([
-    #         {"image": img, "title": 'Original image'},
-    #         {"image": edges, "title": 'Edge Image', 'cmap': 'gray'},
-    #         {"image": draw_lines(edges, lines),
-    #          "title": "All lines", 'cmap': 'gray'},
-    #         {"image": DebugUI.draw_interesting_lines(edges, best_lines, points),
-    #          "title": 'Interesting lines',
-    #          'cmap': 'gray'},
-    #         {"image": DebugUI.draw_target_points(edges, points),
-    #          "title": 'Target transformation points',
-    #          'cmap': 'gray'},
-    #
-    #         {"image": warped, "title": 'Warped', 'cmap': 'gray'},
-    #         {"image": warped_edges, "title": 'Warped edges', 'cmap': 'gray'},
-    #         {"image": grid.lines, "title": 'Lines', 'cmap': 'gray'},
-    #         {"image": grid.columns, "title": 'Columns', 'cmap': 'gray'},
-    #         {"image": DebugUI.draw_grid(warped, grid),
-    #          "title": 'Detected {} lines, {} rows of {}px x {}px'.format(
-    #              len(grid.all_y), len(grid.all_x),
-    #              grid.xpattern.step, grid.ypattern.step), 'cmap': 'gray'},
-    #         {"image": DebugUI.draw_flat_grid(warped, grid),
-    #          "title": 'Reconstitution', 'cmap': 'gray'}])
     return new_img, grid
 
 
-@staticmethod
-def time_convert(sec):
-    mins = sec // 60
-    sec = sec % 60
-    hours = mins // 60
-    mins = mins % 60
-    print("Time Lapsed = {0}:{1}:{2}".format(int(hours), int(mins), sec))
+def json(arguments):
+    arguments.append('--json')
+    return _run(parse_args(arguments))
 
-
-def bilderkennung(img_file):
-    """Run from command line, parsing command line arguments"""
-    #args = parse_args()
-    #if args.test:
-    #    import doctest
-    #    doctest.testmod()
-    #    exit(0)
-
-    #img = "./image_demo.jpg"
-
-    img_file = cv2.imread("./image_demo.jpg")
-
-    start_time = time.time()
-    global DEBUG
-    DEBUG = False
-
-
-    img, grid = find_grid(img_file)
-
-    end_time = time.time()
-    time_lapsed = end_time - start_time
-    #time_convert(time_lapsed)
-    return print_grid_as_json(img, grid)
+def _run(args):
+    img, grid = find_grid(args.file, int(args.resize), int(args.bb))
 
     if args.term:
         print_grid_to_term(img, grid)
     if args.json:
-        print_grid_as_json(img, grid)
+        return grid_as_json(img, grid, args.hc, args.rc, float(args.saturation))
     if args.imwrite:
-        write_grid_in_file(img, grid, args.imwrite)
-    if args.verbose:
-        print('First column at:', grid.xpattern.start)
-        print('First row at:', grid.ypattern.start)
-        print('Column width:', grid.xpattern.step)
-        print('Row width:', grid.ypattern.step)
+        write_grid_in_file(img, grid, args.imwrite, float(args.saturation))
+
+
+def run(arguments):
+    _run(parse_args(arguments))
+
+
+def _main():
+    """Run from command line, parsing command line arguments"""
+    _run(parse_args())
 
 
 if __name__ == '__main__':
