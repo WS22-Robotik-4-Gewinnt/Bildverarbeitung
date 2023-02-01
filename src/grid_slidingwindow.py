@@ -164,15 +164,10 @@ class Grid(object):
         print(edges.shape)
         min_x_step = int(edges.shape[0] / 50)
         min_y_step = int(edges.shape[1] / 50)
-        #self.xpattern = LinePattern.infer(np.sum(lines, axis=1), min_x_step)
-        #self.ypattern = LinePattern.infer(np.sum(columns, axis=0), min_y_step)
-        self.xpattern = LinePattern(0, int(edges.shape[0] / 6))
-        self.ypattern = LinePattern(0, int(edges.shape[1] / 7))
-        
-        #self.all_x = list(self.xpattern.coordinates_up_to(edges.shape[1])
-        self.all_x = list(self.xpattern.coordinates_up_to(int(edges.shape[0] / 6) * 6))
-        #self.all_y = list(self.ypattern.coordinates_up_to(edges.shape[1]))
-        self.all_y = list(self.ypattern.coordinates_up_to(int(edges.shape[1] / 7) * 7))
+        self.xpattern = LinePattern.infer(np.sum(lines, axis=1), min_x_step)
+        self.ypattern = LinePattern.infer(np.sum(columns, axis=0), min_y_step)
+        self.all_x = list(self.xpattern.coordinates_up_to(edges.shape[0]))
+        self.all_y = list(self.ypattern.coordinates_up_to(edges.shape[1]))
 
     @staticmethod
     def keep_lines(array):
@@ -180,24 +175,17 @@ class Grid(object):
         Apply a sliding window to each lines, only keep pixels surrounded
         by 4 pixels, so only keep sequences of 5 pixels minimum.
         """
-        nRows = 6
         out = array.copy()
-        width = int(array.shape[0] / nRows)
-        print('Grid-Breite: ' + str(width))
         for x in range(array.shape[0]):
-            isLine = x % width == 0
-            print('Line bei x = ' + str(x), (isLine and x < nRows * width) or x == array.shape[0]-1)
             for y in range(array.shape[1]):
-                #if y > 0 and y + 1 < array.shape[1]:
-                    #if x % width == 0:
-                        #for y in range(array.shape[1]):
-                out[x, y] = int((isLine and x < nRows * width) or x == array.shape[0]-1) * 255
-                    #else:
-                        #out[x, y] = 0
-                    #out[x, y] = min(
-                     #               array[x][y - 1],
-                      #              array[x][y],
-                    #             array[x][y + 1])
+                if y > 2 and y + 3 < array.shape[1]:
+                    out[x, y] = min(array[x][y - 3],
+                                    array[x][y - 2],
+                                    array[x][y - 1],
+                                    array[x][y],
+                                    array[x][y + 1],
+                                    array[x][y + 2],
+                                    array[x][y + 3])
         return out
 
     @staticmethod
@@ -206,22 +194,17 @@ class Grid(object):
         Apply a sliding window to each column, only keep pixels surrounded
         by 4 pixels, so only keep sequences of 5 pixels minimum.
         """
-        nCols = 7
         out = array.copy()
-        height = int(array.shape[1] / nCols)
-        #for y in range(array.shape[1]):
-            #for x in range(array.shape[0]):
-                #if x > 0 and x + 1 < array.shape[0]:
-                   # out[x, y] = min(
-                    #                array[x - 1][y],
-                     #               array[x][y],
-                      #              array[x + 1][y])
-        print('Grid-Höhe: ' + str(height))
         for y in range(array.shape[1]):
-            isLine = y % height == 0
-            print('Line bei y = ' + str(y), (isLine and y < nCols * height) or y == array.shape[1]-1)
             for x in range(array.shape[0]):
-                out[x, y] = int((isLine and y < nCols * height) or y == array.shape[1]-1) * 255
+                if x > 2 and x + 3 < array.shape[0]:
+                    out[x, y] = min(array[x - 3][y],
+                                    array[x - 2][y],
+                                    array[x - 1][y],
+                                    array[x][y],
+                                    array[x + 1][y],
+                                    array[x + 2][y],
+                                    array[x + 3][y])
         return out
 
     def cells_line_by_line(self):
@@ -559,9 +542,8 @@ def grid_as_json(img, grid, human_color, robot_color, saturation: float):
 
         columns['Column' + (str(column_counter))] = deepcopy(rows)
         column_counter += 1
-    
-    img_flip = cv2.flip(img_flat, 0)
-    cv2.imwrite('/home/test/Bildverarbeitung/final.jpg', img_flip)
+
+    cv2.imwrite('/home/test/Bildverarbeitung/final.jpg', img_flat)
     return json.dumps(columns, indent=4)
 
 
