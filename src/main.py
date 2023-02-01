@@ -17,10 +17,10 @@ console.setLevel(logging.ERROR)
 logging.getLogger("").addHandler(console)
 
 # configuration
-saturation = '1.2'
-grid_buffer = '1'
-human_color = 'red'
-robot_color = 'green'
+saturation = '1.1'
+grid_buffer = '2'
+human_color = 'green'
+robot_color = 'red'
 image_resize = '500'
 camera_id = 1
 
@@ -46,8 +46,7 @@ async def ready(difficulty: Difficulty):
     except:
         grid_json = json.dumps({'error': 'Error analyzing grid'})
 
-    message = json.dumps(grid_json, indent=4)
-    r = requests.post(f"http://localhost:8093/updateBoard", json=message)
+    r = requests.post(f"http://localhost:8093/updateBoard", json=grid_json)
     return Response(r.text)
 
 
