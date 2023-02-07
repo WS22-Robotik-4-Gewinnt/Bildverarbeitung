@@ -46,7 +46,7 @@ async def ready(difficulty: Difficulty):
     except:
         grid_json = json.dumps({'error': 'Error analyzing grid'})
     print(json.dumps(grid_json, indent=4))
-    r = requests.post(f"http://localhost:8093/updateBoard", json=grid_json)
+    r = requests.post(f"http://192.168.53.170:8093/updateBoard", json=grid_json)
     return Response(r.text)
 
 
