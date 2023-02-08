@@ -1,4 +1,4 @@
-FROM arm32v7/python:3.7
+FROM linux/arm/v7/python:3.9
 
 WORKDIR /Bildverarbeitungsservice
 
