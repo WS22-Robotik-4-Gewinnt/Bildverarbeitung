@@ -1,4 +1,4 @@
-FROM python:3.9
+FROM --platform=linux/arm64/v8 python:3.9
 
 WORKDIR /Bildverarbeitungsservice
 
