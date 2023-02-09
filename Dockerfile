@@ -1,5 +1,6 @@
 FROM python:3.9 as python
 
+
 WORKDIR /Bildverarbeitungsservice
 
 # Copy project files
