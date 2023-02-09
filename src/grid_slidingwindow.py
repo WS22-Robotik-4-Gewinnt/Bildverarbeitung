@@ -164,15 +164,10 @@ class Grid(object):
         print(edges.shape)
         min_x_step = int(edges.shape[0] / 50)
         min_y_step = int(edges.shape[1] / 50)
-        #self.xpattern = LinePattern.infer(np.sum(lines, axis=1), min_x_step)
-        #self.ypattern = LinePattern.infer(np.sum(columns, axis=0), min_y_step)
-        self.xpattern = LinePattern(0, int(edges.shape[0] / 6))
-        self.ypattern = LinePattern(0, int(edges.shape[1] / 7))
-        
-        #self.all_x = list(self.xpattern.coordinates_up_to(edges.shape[1])
-        self.all_x = list(self.xpattern.coordinates_up_to(int(edges.shape[0] / 6) * 6))
-        #self.all_y = list(self.ypattern.coordinates_up_to(edges.shape[1]))
-        self.all_y = list(self.ypattern.coordinates_up_to(int(edges.shape[1] / 7) * 7))
+        self.xpattern = LinePattern.infer(np.sum(lines, axis=1), min_x_step)
+        self.ypattern = LinePattern.infer(np.sum(columns, axis=0), min_y_step)
+        self.all_x = list(self.xpattern.coordinates_up_to(edges.shape[0]))
+        self.all_y = list(self.ypattern.coordinates_up_to(edges.shape[1]))
 
     @staticmethod
     def keep_lines(array):
@@ -180,24 +175,17 @@ class Grid(object):
         Apply a sliding window to each lines, only keep pixels surrounded
         by 4 pixels, so only keep sequences of 5 pixels minimum.
         """
-        nRows = 6
         out = array.copy()
-        width = int(array.shape[0] / nRows)
-        print('Grid-Breite: ' + str(width))
         for x in range(array.shape[0]):
-            isLine = x % width == 0
-            print('Line bei x = ' + str(x), (isLine and x < nRows * width) or x == array.shape[0]-1)
             for y in range(array.shape[1]):
-                #if y > 0 and y + 1 < array.shape[1]:
-                    #if x % width == 0:
-                        #for y in range(array.shape[1]):
-                out[x, y] = int((isLine and x < nRows * width) or x == array.shape[0]-1) * 255
-                    #else:
-                        #out[x, y] = 0
-                    #out[x, y] = min(
-                     #               array[x][y - 1],
-                      #              array[x][y],
-                    #             array[x][y + 1])
+                if y > 2 and y + 3 < array.shape[1]:
+                    out[x, y] = min(array[x][y - 3],
+                                    array[x][y - 2],
+                                    array[x][y - 1],
+                                    array[x][y],
+                                    array[x][y + 1],
+                                    array[x][y + 2],
+                                    array[x][y + 3])
         return out
 
     @staticmethod
@@ -206,22 +194,17 @@ class Grid(object):
         Apply a sliding window to each column, only keep pixels surrounded
         by 4 pixels, so only keep sequences of 5 pixels minimum.
         """
-        nCols = 7
         out = array.copy()
-        height = int(array.shape[1] / nCols)
-        #for y in range(array.shape[1]):
-            #for x in range(array.shape[0]):
-                #if x > 0 and x + 1 < array.shape[0]:
-                   # out[x, y] = min(
-                    #                array[x - 1][y],
-                     #               array[x][y],
-                      #              array[x + 1][y])
-        print('Grid-Höhe: ' + str(height))
         for y in range(array.shape[1]):
-            isLine = y % height == 0
-            print('Line bei y = ' + str(y), (isLine and y < nCols * height) or y == array.shape[1]-1)
             for x in range(array.shape[0]):
-                out[x, y] = int((isLine and y < nCols * height) or y == array.shape[1]-1) * 255
+                if x > 2 and x + 3 < array.shape[0]:
+                    out[x, y] = min(array[x - 3][y],
+                                    array[x - 2][y],
+                                    array[x - 1][y],
+                                    array[x][y],
+                                    array[x + 1][y],
+                                    array[x + 2][y],
+                                    array[x + 3][y])
         return out
 
     def cells_line_by_line(self):
@@ -529,11 +512,8 @@ def grid_as_json(img, grid, human_color, robot_color, saturation: float):
     columns = {}
 
     img_flat = img.copy()
-    img_flat = increase_brightness(img_flat, 40)
+    # img_flat = increase_brightness(img_flat)
     img_flat = modify_saturation(img_flat, saturation)
-
-    cv2.imwrite('/home/test/Bildverarbeitung/premod.jpg', img)
-    cv2.imwrite('/home/test/Bildverarbeitung/postmod.jpg', img_flat)
 
     width = grid.xpattern.step
     height = grid.ypattern.step
@@ -553,10 +533,8 @@ def grid_as_json(img, grid, human_color, robot_color, saturation: float):
             offset_y_top = center_y - int(height / 4)
             offset_y_bottom = center_y + int(height / 4)
 
-            average = cv2.mean(img_flat[offset_x_left:offset_x_right, offset_y_top:offset_y_bottom])
-            # average = img_flat[offset_x_left:offset_x_right, offset_y_top:offset_y_bottom].mean(axis=0).mean(axis=0)
+            average = img_flat[offset_x_left:offset_x_right, offset_y_top:offset_y_bottom].mean(axis=0).mean(axis=0)
             color = find_base_color(average)
-            print("Cell: ", column_counter, row_counter, color)
             rows['Row' + (str(row_counter))] = color_to_player(color, human_color, robot_color)
             row_counter += 1
             if color != [255,255,255]:
@@ -564,9 +542,8 @@ def grid_as_json(img, grid, human_color, robot_color, saturation: float):
 
         columns['Column' + (str(column_counter))] = deepcopy(rows)
         column_counter += 1
-    
-    img_flip = cv2.flip(img_flat, 0)
-    cv2.imwrite('/home/test/Bildverarbeitung/final.jpg', img_flip)
+
+    cv2.imwrite('/home/test/Bildverarbeitung/final.jpg', img_flat)
     return json.dumps(columns, indent=4)
 
 
@@ -613,17 +590,17 @@ def write_grid_in_file(img, grid, imwrite, saturation: float):
 
 
 def find_base_color(mean_color):
-    low_red = [0, 30, 20]
-    high_red = [18, 255, 255]
-    low_red_2 = [165, 35, 20]
+    low_red = [0, 50, 20]
+    high_red = [15, 255, 255]
+    low_red_2 = [165, 50, 20]
     high_red_2 = [180, 255, 255]
     low_blue = [90, 50, 20]
     high_blue = [135, 255, 255]
-    low_green = [35, 35, 20]
+    low_green = [35, 0, 20]
     high_green = [105, 255, 255]
 
     hsv_mean = cv2.cvtColor(np.uint8([[mean_color]]), cv2.COLOR_BGR2HSV)
-    print("Farbe: ", hsv_mean)
+
     if blue_green_in_bound(hsv_mean[0][0], low_green, high_green):
         return [0, 255, 0]
     if blue_green_in_bound(hsv_mean[0][0], low_blue, high_blue):
