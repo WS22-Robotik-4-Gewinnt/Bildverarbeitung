@@ -8,7 +8,7 @@ Die Kommunikation von und zu der Bildverarbeitung geschieht mittels REST-API.
 | Name      | Git-Namen | Aufgaben |
 | ----------- | ----------- | -----   |
 | Frieder Ullmann       |  [freed40](https://github.com/freed40)      | Docker, CI, REST-Schnittstelle |
-| Marcel van der Heide  |  [Dutch-0](https://github.com/Dutch-0)       | Grid- und Farberkennung, Unterstützung Docker |
+| Marcel van der Heide  |  [Dutch-0](https://github.com/Dutch-0)       | Grid- und Farberkennung, Unterstützung Docker & CI |
 | Franziska Schmidt     |   -         | - |
 
 
