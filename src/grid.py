@@ -529,8 +529,11 @@ def grid_as_json(img, grid, human_color, robot_color, saturation: float):
     columns = {}
 
     img_flat = img.copy()
-    # img_flat = increase_brightness(img_flat)
+    img_flat = increase_brightness(img_flat, 40)
     img_flat = modify_saturation(img_flat, saturation)
+
+    cv2.imwrite('/home/test/Bildverarbeitung/premod.jpg', img)
+    cv2.imwrite('/home/test/Bildverarbeitung/postmod.jpg', img_flat)
 
     width = grid.xpattern.step
     height = grid.ypattern.step
@@ -550,8 +553,10 @@ def grid_as_json(img, grid, human_color, robot_color, saturation: float):
             offset_y_top = center_y - int(height / 4)
             offset_y_bottom = center_y + int(height / 4)
 
-            average = img_flat[offset_x_left:offset_x_right, offset_y_top:offset_y_bottom].mean(axis=0).mean(axis=0)
+            average = cv2.mean(img_flat[offset_x_left:offset_x_right, offset_y_top:offset_y_bottom])
+            # average = img_flat[offset_x_left:offset_x_right, offset_y_top:offset_y_bottom].mean(axis=0).mean(axis=0)
             color = find_base_color(average)
+            print("Cell: ", column_counter, row_counter, color)
             rows['Row' + (str(row_counter))] = color_to_player(color, human_color, robot_color)
             row_counter += 1
             if color != [255,255,255]:
@@ -608,17 +613,17 @@ def write_grid_in_file(img, grid, imwrite, saturation: float):
 
 
 def find_base_color(mean_color):
-    low_red = [0, 50, 20]
-    high_red = [15, 255, 255]
-    low_red_2 = [165, 50, 20]
+    low_red = [0, 30, 20]
+    high_red = [18, 255, 255]
+    low_red_2 = [165, 35, 20]
     high_red_2 = [180, 255, 255]
     low_blue = [90, 50, 20]
     high_blue = [135, 255, 255]
-    low_green = [35, 0, 20]
+    low_green = [35, 35, 20]
     high_green = [105, 255, 255]
 
     hsv_mean = cv2.cvtColor(np.uint8([[mean_color]]), cv2.COLOR_BGR2HSV)
-
+    print("Farbe: ", hsv_mean)
     if blue_green_in_bound(hsv_mean[0][0], low_green, high_green):
         return [0, 255, 0]
     if blue_green_in_bound(hsv_mean[0][0], low_blue, high_blue):
