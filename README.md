@@ -1,3 +1,4 @@
+
 # Bildverarbeitung
 
 ## Datenstruktur
@@ -15,24 +16,24 @@
 ```
 
 ## Schnittstellen / Kommunikation
-Die Bildverarbeitung wird durch einen Aufruf von der [Hardwaresteuerung](https://github.com/WS22-Robotik-4-Gewinnt/Hardwaresteuerung) ausgelöst. Nach erfolgreicher Aufnahme und Verarbeitung eines Bildes des aktuellen Spielgeschehens durch die angebrachte Kamera, wird der [Spielalgorithmus](https://github.com/WS22-Robotik-4-Gewinnt/Spielalgorithmus) aufgerufen und eine Meldung an der Hardwaresteuerung zurück geschickt.
+Die Bildverarbeitung wird durch einen Aufruf von der [Hardwaresteuerung](https://github.com/WS22-Robotik-4-Gewinnt/Hardwaresteuerung) ausgelöst. Nach erfolgreicher Aufnahme und Verarbeitung eines Bildes des aktuellen Spielgeschehens durch die angebrachte Kamera, wird der [Spielalgorithmus](https://github.com/WS22-Robotik-4-Gewinnt/Spielalgorithmus) aufgerufen und welcher eine Meldung an die Hardwaresteuerung zurück schickt, welcher Zug gegangen werden soll oder das Spiel zuende ist.
 
-Hierfür steht die folgenden REST-POST-Methode zu Verfügung:
+Hierfür stehen die folgenden REST-POST-Methode zu Verfügung:
 
 ```Python
 @app.post("/ready")
 async def ready(difficulty: Difficulty):
 ```
 
-Für den hier beschriebene Eingabeparameter `difficulty`, welches als JSON im `Body` übergeben werden muss, wird ein Zahlenwert erwartet, der die aktuelle Schwierigkeitsgrad beschreibt. Dieser Wert wird von der Bildverarbeitung nicht verwendet, sondern lediglich weitergereicht.
+Für den hier beschriebene Eingabeparameter `difficulty`, welches als JSON im `Body` übergeben werden muss, wird ein Zahlenwert erwartet, der den aktuellen Schwierigkeitsgrad beschreibt. Dieser Wert wird von der Bildverarbeitung nicht verwendet, sondern lediglich weitergereicht.
 
-Nachdem die Methode erfolgreich aufgerufen wurde, wird zuerst mit der angebrachte Kamera ein Bild erstellt. Dieses Bild wird anscheinend durch die `grid.py` Datei mithilfe von Bilderkennungsalgorithmen analysiert um anschließend eine textuelle Beschreibung des aktuellen Spielstands im JSON-Format zu erstellen.
+Nachdem die Methode erfolgreich aufgerufen wurde, wird zuerst mit der angebrachte Kamera ein Bild erstellt. Dieses Bild wird anscheinend durch die `grid.py` Datei mithilfe von Bilderkennungsalgorithmen analysiert, um anschließend eine textuelle Beschreibung des aktuellen Spielstands im JSON-Format zu erstellen.
 
-Zum Schluss werden beide Informationen, den aktuellen Spielstand sowie den Schwierigkeitsgrad, an dem Spielalgorithmus übergeben.
+Zum Schluss werden beide Informationen, der aktuelle Spielstand sowie der Schwierigkeitsgrad, an den Spielalgorithmus übergeben.
 
 
 ### Weitere Methoden
-Für Testzwecken stehen zwei weitere POST-REST-Methoden zu Verfügung:
+Für Testzwecke stehen zwei weitere POST-REST-Methoden zu Verfügung:
 
 ```Python
 @app.post("/readyDebug")  
@@ -51,7 +52,7 @@ Die zweite Methode erstellt weder ein Bild, noch wird eins analysiert. Hier wird
 
 
 ###  Bildverarbeitung -> Spielalgorithmus
-Der im Aufruf an den Spielealgorithmus beinhalteter JSON, der den aktuellen Spielstand beschreiben soll, hat den folgenden Aufbau:
+Der im Aufruf an den Spielalgorithmus beinhaltete JSON, der den aktuellen Spielstand beschreiben soll, hat den folgenden Aufbau:
 
 ```json
 {
@@ -68,8 +69,8 @@ Der im Aufruf an den Spielealgorithmus beinhalteter JSON, der den aktuellen Spie
 
 Die hier angegeben Werte für jede Zelle (`0`, `h`, oder `r`) sind Beispielhaft, wie auch der Wert für `Difficulty`.
 
-`h` steht für human, also der Spieler. <br>
-`r` steht für robot, also der mechanische Arm.<br>
+`h` steht für Human, also der Spieler. <br>
+`r` steht für Robot, also der mechanische Arm.<br>
 `0` steht für ein Spielfeld welches noch kein Farbwert besitzt.
 
 ## Installation Docker
@@ -77,10 +78,10 @@ Die hier angegeben Werte für jede Zelle (`0`, `h`, oder `r`) sind Beispielhaft,
 Für die Verwendung dieses Programms wird Docker empfohlen. Mit den folgenden Schritten kann ein Dockerimage erzeugt und ein Container gestartet werden.
 
 1. `docker build -t bildverarbeitungsservice .` <br>
-   Erstellt das Dockerimage mit den Quelldateien
-2. `docker run -p 5000:8090 bildverarbeitungsservice`<br>
+   Erstellt das Dockerimage mit den Quelldateien und dem Zugriff auf die Kamera (hier camera0)
+2. `docker run --device /dev/camera0 -d -p 8090:8090 bildverarbeitungsservice`<br>
    Erstellt und startet einen neuen Docker Container aus dem vorher erstellten Image.
-   Nach erfolgreicher Start ist die Anwendung über den Port 5000 erreichbar. Dieser Port kann im Befehl nach belieben verändert werden.
+   Nach erfolgreicher Start ist die Anwendung über den Port 8090 erreichbar. Dieser Port kann im Befehl nach belieben verändert werden.
 
 
 ## Projektverlauf
@@ -91,14 +92,14 @@ Für die Verwendung dieses Programms wird Docker empfohlen. Mit den folgenden Sc
 5. Nach weitere Analyse des Quellcodes wurden mehrere Stellen identifiziert, die verbessert werden mussten.
     1. Das original Bild wurde nicht skaliert, wodurch eine Verarbeitung besonders langsam war.
     2. Die Suche nach Ecken, Linien und einem Quadrat war umständlich, wodurch die Verarbeitung auch hier besonders langsam wurde. Durch die neue Methode `findOuterBounds` wurde diese Herangehensweise durch eine wesentlich schnellere, eigene Lösung ersetzt.
-    3. Für weiteren Perfomance Gewinn, wird das Bild auf das gefundene Grid zugeschnitten, damit andere Bereiche nicht mehr verarbeitet werden.
+    3. Für weiteren Performance-Gewinn, wird das Bild auf das gefundene Grid zugeschnitten, damit andere Bereiche nicht mehr verarbeitet werden.
     4. Ebenfalls wurde die `warp_image` Methode, welches ein verzerrtes Rechteck begradigt,  durch [eine effizientere Alternative](https://pyimagesearch.com/2014/08/25/4-point-opencv-getperspective-transform-example/) ersetzt.
 6. Für die Anbindung an dem Spielalgorithmus wurde es notwendig, die für jede Zelle erkannte Farbe, auf einen der 3 Grundfarben (RGB) runter zu brechen.
     1. Berechnung des Durchschnittsfarbwerts für eine Zelle:
        ```Python
        average = img_flat[x:x + width, y:y + height].mean(axis=0).mean(axis=0)
        ```
-    2. Die errechnete Farbe war allerdings zu hell, da der mechanische Arm zu dem Zeitpunkt lediglich ein kleiner Punkt erstellte. Daher musste nur ein kleiner Bereich aus dem Zentrum einer Zelle in betracht gezogen werden:
+    2. Die errechnete Farbe war allerdings zu hell, da der mechanische Arm zu dem Zeitpunkt lediglich ein kleiner Punkt erstellte. Daher musste nur ein kleiner Bereich aus dem Zentrum einer Zelle in Betracht gezogen werden:
        ```Python
        # We only want a smaller area of the cell
        center_x = x + int(width / 2)  
@@ -126,9 +127,9 @@ Für die Verwendung dieses Programms wird Docker empfohlen. Mit den folgenden Sc
         ```Python
         hsv_mean = cv2.cvtColor(np.uint8([[mean_color]]), cv2.COLOR_BGR2HSV)
         ```
-        Anschließend wurde geprüft ob der umgewandelte Durchschnittsfarbe in einem der Bereiche liegt. Falls ja, wird die entsprechende Grundfarbe für die Zelle notiert, andernfalls wird Weiß notiert.
+        Anschließend wurde geprüft, ob der umgewandelte Durchschnittsfarbe in einem der Bereiche liegt. Falls ja, wird die entsprechende Grundfarbe für die Zelle notiert, andernfalls wird Weiß notiert.
 7.  Die Farberkennung war zu diesem Zeitpunkt bereits sehr gut. Da die Punkte aber weiterhin sehr klein waren und die Farben sehr hell, kam es leider immer noch zu Felder die fälschlicherweise als Leer erkannt wurden. Um die Erkennung auch hier noch zu verbessern, wurde eine Methode (sowie Konfigurationsparameter) eingebaut um die Farbsättigung des Bildes zu erhöhen.
-8. Mapping von Grundfarbe zu Spieler bzw. Roboter.
-9. Anpassung des Ausgabe JSONs auf das gewünschte Format.
+8. Anpassbares Mapping von Grundfarbe zu Spieler bzw. Roboter.
+9. Anpassung der Ausgabe JSONs auf das gewünschte Format.
 10. Fertigstellung der REST-Schnittstellen.
-11. Fertigstellung des Dockerfiles.
+11. Fertigstellung des Dockerfiles, mit CI Überprüfung und Erstellung eines Packetes mit Hilfe von Github-Workflow.
