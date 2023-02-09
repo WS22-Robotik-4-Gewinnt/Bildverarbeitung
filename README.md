@@ -1,13 +1,13 @@
 
 # Bildverarbeitung
-Die Bildverarbeitung ist für die Erkennung des aktuellen Spielstandes zuständig. Hierfür wird über eine angebrachte USB-Kamera ein Bild vom aktuellen Spielgeschehen erstellt und analysiert. Bei der Analyse wird auf dem Bild nach einem Grid (Tabelle) gesucht, um anschließend der Inhalt der einzelnen Zellen zu ermitteln. <br>
+Die Bildverarbeitung ist für die Erkennung des aktuellen Spielstandes zuständig. Hierfür wird über eine angebrachte USB-Kamera ein Bild vom aktuellen Spielgeschehen erstellt und analysiert. Bei der Analyse wird auf dem Bild nach einem Grid (Tabelle) gesucht, um anschließend den Inhalt der einzelnen Zellen zu ermitteln. <br>
 Die Kommunikation von und zu der Bildverarbeitung geschieht mittels REST-API.
 
 ## Gruppenmitglieder
 
 | Name      | Git-Namen | Aufgaben |
 | ----------- | ----------- | -----   |
-| Frieder Ullmann       |  [freed40](https://github.com/freed40)      | Docker, REST-Schnittstelle |
+| Frieder Ullmann       |  [freed40](https://github.com/freed40)      | Docker, CI, REST-Schnittstelle |
 | Marcel van der Heide  |  [Dutch-0](https://github.com/Dutch-0)       | Grid- und Farberkennung, Unterstützung Docker |
 | Franziska Schmidt     |   -         | - |
 
