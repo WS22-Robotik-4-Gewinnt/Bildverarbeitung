@@ -11,8 +11,6 @@ from src import grid
 LOG = "logging_data.log"
 logging.basicConfig(filename=LOG, filemode="w", level=logging.DEBUG)
 
-
-
 # console handler
 console = logging.StreamHandler()
 console.setLevel(logging.ERROR)
@@ -85,7 +83,7 @@ async def ready_debug_static(difficulty: Difficulty):
 
 
 def analyze_grid(take_image: bool = True):
-    img_path = str(pathlib.Path(__file__).resolve().parent) + '/assets/image_demo.jpg'
+    img_path = str(pathlib.Path(__file__).resolve().parent) + '/assets/imagedemo.jpg'
 
     global saturation, saturation, grid_buffer, human_color, robot_color, image_resize, camera_id
 
@@ -100,13 +98,10 @@ def analyze_grid(take_image: bool = True):
             cam_flip = cv2.flip(image, 1)
             zoomed = zoom_at(cam_flip, 1.2)
             cv2.imwrite(img_path, zoomed)
-            #cam_flip = cv2.flip(zoomed, 0)
-            #cv2.imwrite("/tmp/camImage1.jpg", zoomed)
 
         finally:
             if cam is not None:
                 cam.release()
-
 
     return grid.json([
         img_path,
@@ -117,11 +112,11 @@ def analyze_grid(take_image: bool = True):
         '--saturation=' + saturation,
     ])
 
+
 def zoom_at(img, zoom=1, angle=0, coord=None):
+    cy, cx = [i / 2 for i in img.shape[:-1]] if coord is None else coord[::-1]
 
-    cy, cx = [ i/2 for i in img.shape[:-1] ] if coord is None else coord[::-1]
-
-    rot_mat = cv2.getRotationMatrix2D((cx,cy), angle, zoom)
+    rot_mat = cv2.getRotationMatrix2D((cx, cy), angle, zoom)
     result = cv2.warpAffine(img, rot_mat, img.shape[1::-1], flags=cv2.INTER_LINEAR)
 
     return result
@@ -130,4 +125,3 @@ def zoom_at(img, zoom=1, angle=0, coord=None):
 # PORT Spielalgorithmus: 8093
 # PORT Hardwaresteuerung: 8096
 # docker login -p PASSWORD -u USER/MAIL github.com
-
