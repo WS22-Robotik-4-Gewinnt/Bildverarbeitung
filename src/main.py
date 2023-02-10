@@ -11,7 +11,6 @@ from src import grid
 LOG = "logging_data.log"
 logging.basicConfig(filename=LOG, filemode="w", level=logging.DEBUG)
 
-target_ip = "http://172.17.0.1"
 # console handler
 console = logging.StreamHandler()
 console.setLevel(logging.ERROR)
@@ -46,8 +45,11 @@ async def ready(difficulty: Difficulty):
         grid_json.update({'Difficulty': difficulty.difficulty})
     except:
         grid_json = json.dumps({'error': 'Error analyzing grid'})
-    message = json.dumps(grid_json, indent=4)
-    r = requests.post(target_ip + ":8093/updateBoard", json=message)
+    #message = json.dumps(grid_json, indent=4)
+    #messsage = json.loads(grid_json)
+    message = grid_json
+    print(str(message))
+    r = requests.post("http://172.17.0.1:8093/updateBoard", json=message)
     return Response(r.text)
 
 
