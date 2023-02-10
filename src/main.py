@@ -24,7 +24,7 @@ grid_buffer = '0'
 human_color = 'green'
 robot_color = 'red'
 image_resize = '500'
-camera_id = 0
+camera_id = 1
 
 
 class Difficulty(BaseModel):
@@ -47,9 +47,11 @@ async def ready(difficulty: Difficulty):
         grid_json.update({'Difficulty': difficulty.difficulty})
     except:
         grid_json = json.dumps({'error': 'Error analyzing grid'})
-    message = json.dumps(grid_json, indent=4)
+    #message = json.dumps(grid_json, indent=4)
+    #messsage = json.loads(grid_json)
+    message = grid_json
     print(str(message))
-    r = requests.post(f"http://172.17.0.1:8093/updateBoard", json=message)
+    r = requests.post("http://172.17.0.1:8093/updateBoard", json=message)
     return Response(r.text)
 
 
